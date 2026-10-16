@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: queue
+    description: Clinic queue operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,113 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /queue/today:
+    get:
+      operationId: getTodayQueue
+      tags: [queue]
+      summary: Get today's clinic queue and dashboard totals
+      responses:
+        "200":
+          description: Today's queue snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueueSnapshot"
+  /queue:
+    post:
+      operationId: addQueueEntry
+      tags: [queue]
+      summary: Add a patient to today's queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QueueEntryInput"
+      responses:
+        "201":
+          description: Patient added to the queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueueEntry"
+        "400":
+          description: Invalid patient details
+  /queue/call-next:
+    post:
+      operationId: callNextPatient
+      tags: [queue]
+      summary: Call the next waiting patient
+      responses:
+        "200":
+          description: Patient called
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueueEntry"
+        "404":
+          description: No patients are waiting
+        "409":
+          description: A patient is already with the doctor
+  /queue/{entryId}/complete:
+    post:
+      operationId: completeQueueEntry
+      tags: [queue]
+      summary: Complete the current consultation
+      parameters:
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Consultation completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueueEntry"
+        "404":
+          description: Queue entry not found
+        "409":
+          description: Queue entry is not currently with the doctor
+  /queue/{entryId}/cancel:
+    post:
+      operationId: cancelQueueEntry
+      tags: [queue]
+      summary: Cancel or skip a queue entry
+      parameters:
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Queue entry cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueueEntry"
+        "404":
+          description: Queue entry not found
+        "409":
+          description: Queue entry can no longer be cancelled
+  /queue/events:
+    get:
+      operationId: subscribeQueueEvents
+      tags: [queue]
+      summary: Subscribe to live queue updates
+      description: Server-sent events stream. Emits a queue-updated event after each queue change.
+      responses:
+        "200":
+          description: Server-sent event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
 components:
   schemas:
     HealthStatus:
@@ -33,4 +142,86 @@ components:
           type: string
       required:
         - status
+    QueueStatus:
+      type: string
+      enum: [waiting, with_doctor, completed, cancelled]
+    QueueEntry:
+      type: object
+      required:
+        - id
+        - patientId
+        - queueNumber
+        - name
+        - issueDescription
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        queueNumber:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: ["string", "null"]
+        issueDescription:
+          type: string
+        status:
+          $ref: "#/components/schemas/QueueStatus"
+        doctorId:
+          type: ["string", "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        calledAt:
+          type: ["string", "null"]
+          format: date-time
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+    QueueSnapshot:
+      type: object
+      required:
+        - clinicName
+        - serviceDate
+        - waitingCount
+        - completedToday
+        - averageWaitMinutes
+        - entries
+      properties:
+        clinicName:
+          type: string
+        serviceDate:
+          type: string
+          format: date
+        waitingCount:
+          type: integer
+        completedToday:
+          type: integer
+        averageWaitMinutes:
+          type: ["number", "null"]
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/QueueEntry"
+    QueueEntryInput:
+      type: object
+      required: [name, issueDescription]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 30
+        issueDescription:
+          type: string
+          minLength: 1
+          maxLength: 240
 

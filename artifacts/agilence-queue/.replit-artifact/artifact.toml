@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Agilence Queue"
+description = "A simple live clinic queue for receptionists and doctors. Add walk-in patients, follow queue status in real time, call the next patient, and complete or cancel visits."
+version = "1.0.0"
+id = "artifacts/agilence-queue"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23539
+
+[services.development]
+run = "pnpm --filter @workspace/agilence-queue run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/agilence-queue", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/agilence-queue/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23539"
+BASE_PATH = "/"
