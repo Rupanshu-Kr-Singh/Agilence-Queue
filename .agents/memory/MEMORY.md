@@ -1,0 +1,1 @@
+- [Vite React prebundle cache](vite-react-prebundle-cache.md) — a stale optimizer bundle can keep reporting old React versions after package resolution is fixed.

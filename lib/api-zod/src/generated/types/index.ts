@@ -6,6 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './addClinicMemberInput';
+export * from './addClinicMemberInputRole';
+export * from './appRole';
+export * from './clinicMember';
+export * from './clinicMemberResponse';
+export * from './clinicMembersResponse';
+export * from './currentClinicUser';
+export * from './currentClinicUserResponse';
 export * from './healthStatus';
 export * from './queueEntry';
 export * from './queueEntryInput';

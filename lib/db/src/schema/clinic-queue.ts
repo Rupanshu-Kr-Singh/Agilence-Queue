@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -8,6 +9,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -37,13 +39,24 @@ export const clinicUsersTable = pgTable("clinic_users", {
   clinicId: uuid("clinic_id")
     .references(() => clinicsTable.id)
     .notNull(),
+  clerkUserId: text("clerk_user_id"),
   displayName: text("display_name").notNull(),
+  email: text("email"),
   role: clinicRoleEnum("role").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
-});
+}, (table) => [
+  uniqueIndex("clinic_users_clinic_clerk_user_id_unique").on(
+    table.clinicId,
+    table.clerkUserId,
+  ),
+  uniqueIndex("clinic_users_clinic_email_unique").on(
+    table.clinicId,
+    table.email,
+  ),
+]);
 
 export const doctorsTable = pgTable("doctors", {
   id: uuid("id").defaultRandom().primaryKey(),

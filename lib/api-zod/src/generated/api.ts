@@ -18,6 +18,63 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Get the signed-in clinic user's role and profile
+ */
+export const GetCurrentClinicUserResponse = zod.object({
+  "user": zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "email": zod.string().email(),
+  "role": zod.enum(['admin', 'assistant', 'doctor']),
+  "clinicId": zod.string().uuid(),
+  "clinicName": zod.string()
+})
+})
+
+
+/**
+ * @summary List clinic users (clinic owner only)
+ */
+export const ListClinicMembersResponse = zod.object({
+  "members": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "email": zod.string().email(),
+  "role": zod.enum(['admin', 'assistant', 'doctor']),
+  "isActive": zod.boolean(),
+  "hasAccount": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Grant clinic access to a staff email (clinic owner only)
+ */
+export const addClinicMemberBodyDisplayNameMax = 120;
+
+export const addClinicMemberBodyEmailMax = 254;
+
+
+
+export const AddClinicMemberBody = zod.object({
+  "displayName": zod.string().min(1).max(addClinicMemberBodyDisplayNameMax),
+  "email": zod.string().email().max(addClinicMemberBodyEmailMax),
+  "role": zod.enum(['assistant', 'doctor'])
+})
+
+export const AddClinicMemberResponse = zod.object({
+  "member": zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "email": zod.string().email(),
+  "role": zod.enum(['admin', 'assistant', 'doctor']),
+  "isActive": zod.boolean(),
+  "hasAccount": zod.boolean()
+})
+})
+
+
+/**
  * @summary Get today's clinic queue and dashboard totals
  */
 export const GetTodayQueueResponse = zod.object({

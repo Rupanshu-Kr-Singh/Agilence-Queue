@@ -26,8 +26,13 @@ import {
   getQueueEntryById,
   queueEvents,
 } from "../lib/clinic-queue";
+import {
+  requireClinicMember,
+  requireClinicRole,
+} from "../middlewares/clinicAuthorization";
 
 const router: IRouter = Router();
+router.use(requireClinicMember);
 
 router.get("/queue/today", async (req, res): Promise<void> => {
   const entries = await getQueueEntriesForToday();
@@ -55,7 +60,7 @@ router.get("/queue/today", async (req, res): Promise<void> => {
   res.json(GetTodayQueueResponse.parse(snapshot));
 });
 
-router.post("/queue", async (req, res): Promise<void> => {
+router.post("/queue", requireClinicRole("assistant"), async (req, res): Promise<void> => {
   const parsed = AddQueueEntryBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -79,7 +84,7 @@ router.post("/queue", async (req, res): Promise<void> => {
   res.status(201).json(response);
 });
 
-router.post("/queue/call-next", async (req, res): Promise<void> => {
+router.post("/queue/call-next", requireClinicRole("doctor"), async (req, res): Promise<void> => {
   const result = await callNextWaitingPatient();
   if ("conflict" in result) {
     if (result.conflict === "current") {
@@ -94,7 +99,7 @@ router.post("/queue/call-next", async (req, res): Promise<void> => {
   res.json(CallNextPatientResponse.parse(result));
 });
 
-router.post("/queue/:entryId/complete", async (req, res): Promise<void> => {
+router.post("/queue/:entryId/complete", requireClinicRole("doctor"), async (req, res): Promise<void> => {
   const parsed = CompleteQueueEntryParams.safeParse(req.params);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -140,7 +145,7 @@ router.post("/queue/:entryId/complete", async (req, res): Promise<void> => {
   res.json(CompleteQueueEntryResponse.parse(entry));
 });
 
-router.post("/queue/:entryId/cancel", async (req, res): Promise<void> => {
+router.post("/queue/:entryId/cancel", requireClinicRole("assistant", "doctor"), async (req, res): Promise<void> => {
   const parsed = CancelQueueEntryParams.safeParse(req.params);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

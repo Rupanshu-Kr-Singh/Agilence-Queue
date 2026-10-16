@@ -20,6 +20,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AddClinicMemberInput,
+  ClinicMemberResponse,
+  ClinicMembersResponse,
+  CurrentClinicUserResponse,
   HealthStatus,
   QueueEntry,
   QueueEntryInput,
@@ -130,6 +134,248 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
+
+export const getGetCurrentClinicUserUrl = () => {
+
+
+
+
+  return `/api/auth/me`
+}
+
+/**
+ * @summary Get the signed-in clinic user's role and profile
+ */
+export const getCurrentClinicUser = async ( options?: Parameters<typeof customFetch>[1]): Promise<CurrentClinicUserResponse> => {
+
+  return customFetch<CurrentClinicUserResponse>(getGetCurrentClinicUserUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCurrentClinicUserQueryKey = () => {
+    return [
+    `/api/auth/me`
+    ] as const;
+    }
+
+
+export const getGetCurrentClinicUserQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentClinicUser>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentClinicUser>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCurrentClinicUserQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentClinicUser>>> = ({ signal }) => getCurrentClinicUser({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCurrentClinicUser>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCurrentClinicUserQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentClinicUser>>>
+export type GetCurrentClinicUserQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the signed-in clinic user's role and profile
+ */
+
+export function useGetCurrentClinicUser<TData = Awaited<ReturnType<typeof getCurrentClinicUser>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentClinicUser>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCurrentClinicUserQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListClinicMembersUrl = () => {
+
+
+
+
+  return `/api/auth/members`
+}
+
+/**
+ * @summary List clinic users (clinic owner only)
+ */
+export const listClinicMembers = async ( options?: Parameters<typeof customFetch>[1]): Promise<ClinicMembersResponse> => {
+
+  return customFetch<ClinicMembersResponse>(getListClinicMembersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListClinicMembersQueryKey = () => {
+    return [
+    `/api/auth/members`
+    ] as const;
+    }
+
+
+export const getListClinicMembersQueryOptions = <TData = Awaited<ReturnType<typeof listClinicMembers>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClinicMembers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListClinicMembersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listClinicMembers>>> = ({ signal }) => listClinicMembers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listClinicMembers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListClinicMembersQueryResult = NonNullable<Awaited<ReturnType<typeof listClinicMembers>>>
+export type ListClinicMembersQueryError = ErrorType<void>
+
+
+/**
+ * @summary List clinic users (clinic owner only)
+ */
+
+export function useListClinicMembers<TData = Awaited<ReturnType<typeof listClinicMembers>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClinicMembers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListClinicMembersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAddClinicMemberUrl = () => {
+
+
+
+
+  return `/api/auth/members`
+}
+
+/**
+ * @summary Grant clinic access to a staff email (clinic owner only)
+ */
+export const addClinicMember = async (addClinicMemberInput: AddClinicMemberInput, options?: Parameters<typeof customFetch>[1]): Promise<ClinicMemberResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ClinicMemberResponse>(getAddClinicMemberUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(addClinicMemberInput)
+  }
+);}
+
+
+
+
+
+export const getAddClinicMemberMutationKey = () => ['addClinicMember'] as const;
+
+export const getAddClinicMemberMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addClinicMember>>, TError,AddClinicMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addClinicMember>>, TError,AddClinicMemberMutationVariables, TContext> => {
+
+const mutationKey = getAddClinicMemberMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addClinicMember>>, AddClinicMemberMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  addClinicMember(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddClinicMemberMutationResult = NonNullable<Awaited<ReturnType<typeof addClinicMember>>>
+    export type AddClinicMemberMutationBody = BodyType<AddClinicMemberInput>
+    export type AddClinicMemberMutationError = ErrorType<void>
+    export type AddClinicMemberMutationVariables = {data: BodyType<AddClinicMemberInput>}
+
+    /**
+ * @summary Grant clinic access to a staff email (clinic owner only)
+ */
+export const useAddClinicMember = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addClinicMember>>, TError,AddClinicMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addClinicMember>>,
+        TError,
+        AddClinicMemberMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddClinicMemberMutationOptions(options));
+    }
 
 export const getGetTodayQueueUrl = () => {
 

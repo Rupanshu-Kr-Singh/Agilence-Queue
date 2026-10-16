@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: queue
     description: Clinic queue operations
+  - name: auth
+    description: Sign-in and clinic role operations
 paths:
   /healthz:
     get:
@@ -26,6 +28,59 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/me:
+    get:
+      operationId: getCurrentClinicUser
+      tags: [auth]
+      summary: Get the signed-in clinic user's role and profile
+      responses:
+        "200":
+          description: Signed-in clinic member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentClinicUserResponse"
+        "401":
+          description: Sign-in required
+        "403":
+          description: Account is not assigned to this clinic
+  /auth/members:
+    get:
+      operationId: listClinicMembers
+      tags: [auth]
+      summary: List clinic users (clinic owner only)
+      responses:
+        "200":
+          description: Clinic staff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicMembersResponse"
+        "403":
+          description: Clinic owner role required
+    post:
+      operationId: addClinicMember
+      tags: [auth]
+      summary: Grant clinic access to a staff email (clinic owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddClinicMemberInput"
+      responses:
+        "201":
+          description: Staff access granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicMemberResponse"
+        "400":
+          description: Invalid staff details
+        "403":
+          description: Clinic owner role required
+        "409":
+          description: Email already has clinic access
   /queue/today:
     get:
       operationId: getTodayQueue
@@ -142,6 +197,81 @@ components:
           type: string
       required:
         - status
+    AppRole:
+      type: string
+      enum: [admin, assistant, doctor]
+    CurrentClinicUser:
+      type: object
+      required: [id, displayName, email, role, clinicId, clinicName]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          $ref: "#/components/schemas/AppRole"
+        clinicId:
+          type: string
+          format: uuid
+        clinicName:
+          type: string
+    CurrentClinicUserResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/CurrentClinicUser"
+    ClinicMember:
+      type: object
+      required: [id, displayName, email, role, isActive, hasAccount]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          $ref: "#/components/schemas/AppRole"
+        isActive:
+          type: boolean
+        hasAccount:
+          type: boolean
+    ClinicMembersResponse:
+      type: object
+      required: [members]
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClinicMember"
+    AddClinicMemberInput:
+      type: object
+      required: [displayName, email, role]
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        role:
+          type: string
+          enum: [assistant, doctor]
+    ClinicMemberResponse:
+      type: object
+      required: [member]
+      properties:
+        member:
+          $ref: "#/components/schemas/ClinicMember"
     QueueStatus:
       type: string
       enum: [waiting, with_doctor, completed, cancelled]

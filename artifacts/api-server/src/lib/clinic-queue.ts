@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import {
   clinicUsersTable,
@@ -37,6 +37,7 @@ export async function initializeDemoClinic(): Promise<void> {
     .onConflictDoNothing()
     .returning({ id: clinicsTable.id });
 
+  const ownerEmail = process.env.CLINIC_OWNER_EMAIL?.trim().toLowerCase();
   await db
     .insert(clinicUsersTable)
     .values([
@@ -44,6 +45,7 @@ export async function initializeDemoClinic(): Promise<void> {
         id: "00000000-0000-4000-8000-000000000002",
         clinicId: DEFAULT_CLINIC_ID,
         displayName: "Clinic owner",
+        email: ownerEmail || null,
         role: "admin",
       },
       {
@@ -60,6 +62,18 @@ export async function initializeDemoClinic(): Promise<void> {
       },
     ])
     .onConflictDoNothing();
+
+  if (ownerEmail) {
+    await db
+      .update(clinicUsersTable)
+      .set({ email: ownerEmail })
+      .where(
+        and(
+          eq(clinicUsersTable.id, "00000000-0000-4000-8000-000000000002"),
+          isNull(clinicUsersTable.clerkUserId),
+        ),
+      );
+  }
 
   await db
     .insert(doctorsTable)

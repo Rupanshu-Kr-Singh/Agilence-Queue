@@ -9,6 +9,64 @@ export interface HealthStatus {
   status: string;
 }
 
+export type AppRole = typeof AppRole[keyof typeof AppRole];
+
+
+export const AppRole = {
+  admin: 'admin',
+  assistant: 'assistant',
+  doctor: 'doctor',
+} as const;
+
+export interface CurrentClinicUser {
+  id: string;
+  displayName: string;
+  email: string;
+  role: AppRole;
+  clinicId: string;
+  clinicName: string;
+}
+
+export interface CurrentClinicUserResponse {
+  user: CurrentClinicUser;
+}
+
+export interface ClinicMember {
+  id: string;
+  displayName: string;
+  email: string;
+  role: AppRole;
+  isActive: boolean;
+  hasAccount: boolean;
+}
+
+export interface ClinicMembersResponse {
+  members: ClinicMember[];
+}
+
+export type AddClinicMemberInputRole = typeof AddClinicMemberInputRole[keyof typeof AddClinicMemberInputRole];
+
+
+export const AddClinicMemberInputRole = {
+  assistant: 'assistant',
+  doctor: 'doctor',
+} as const;
+
+export interface AddClinicMemberInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  displayName: string;
+  /** @maxLength 254 */
+  email: string;
+  role: AddClinicMemberInputRole;
+}
+
+export interface ClinicMemberResponse {
+  member: ClinicMember;
+}
+
 export type QueueStatus = typeof QueueStatus[keyof typeof QueueStatus];
 
 
