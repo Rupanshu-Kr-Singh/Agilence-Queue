@@ -3,6 +3,8 @@ import {
   boolean,
   date,
   integer,
+  jsonb,
+  numeric,
   pgEnum,
   pgTable,
   primaryKey,
@@ -29,6 +31,13 @@ export const queueStatusEnum = pgEnum("queue_status", [
 export const clinicsTable = pgTable("clinics", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
+  clinicCode: text("clinic_code"),
+  location: text("location"),
+  subscriptionPlan: text("subscription_plan"),
+  couponCode: text("coupon_code"),
+  subscriptionAmount: numeric("subscription_amount"),
+  subscriptionRenewalDate: date("subscription_renewal_date"),
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -78,6 +87,8 @@ export const patientsTable = pgTable("patients", {
     .notNull(),
   name: text("name").notNull(),
   phone: text("phone"),
+  email: text("email"),
+  clerkUserId: text("clerk_user_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -110,6 +121,9 @@ export const queueEntriesTable = pgTable(
     doctorId: uuid("doctor_id").references(() => doctorsTable.id),
     issueDescription: text("issue_description").notNull(),
     status: queueStatusEnum("status").default("waiting").notNull(),
+    patientJoinedOnline: boolean("patient_joined_online")
+      .default(false)
+      .notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -135,6 +149,12 @@ export const consultationsTable = pgTable("consultations", {
     .notNull()
     .unique(),
   doctorId: uuid("doctor_id").references(() => doctorsTable.id),
+  consultationNotes: text("consultation_notes"),
+  diagnosis: text("diagnosis"),
+  prescription: text("prescription"),
+  consultationData: jsonb("consultation_data"),
+  doctorObservations: text("doctor_observations"),
+  followUpInformation: text("follow_up_information"),
   startedAt: timestamp("started_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

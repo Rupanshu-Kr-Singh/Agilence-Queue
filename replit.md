@@ -9,7 +9,9 @@ A simple, shared clinic queue for small local clinics in India. Reception can ch
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+- `pnpm --filter @workspace/db exec drizzle-kit generate --config ./drizzle.config.ts --name <name>` — generate a versioned SQL migration from the Drizzle schema
+- `pnpm --filter @workspace/db run check` — validate the migration chain
+- `pnpm --filter @workspace/db run migrate` — apply pending migrations to the database in `DATABASE_URL`
 - Required env: `DATABASE_URL`, `CLINIC_OWNER_EMAIL`, and Replit-managed Clerk keys
 
 ## Stack
@@ -35,6 +37,7 @@ A simple, shared clinic queue for small local clinics in India. Reception can ch
 - PostgreSQL is the shared source of truth; server-sent events notify connected dashboards, which then reload the queue snapshot.
 - Queue numbers are daily and use the clinic's India time zone.
 - The MVP has one demo clinic and one shared queue. The schema keeps clinic users and doctor assignment separate so multiple staff and doctor-specific queues can be added later.
+- The Drizzle schema and `lib/db/migrations/` are version-controlled. Apply changes with generated migrations; never use schema push/force against an existing database.
 - Clerk handles sign-in; clinic membership and roles are stored in PostgreSQL and enforced by the API.
 - The first admin role is pre-authorized by `CLINIC_OWNER_EMAIL` and is attached only after that user verifies the matching email with Clerk. Never allow arbitrary sign-ups to claim the owner role.
 - Admin can use both reception and doctor queue actions and grant receptionist/doctor access by email. Staff must sign up with the same verified email before they can view the clinic.
@@ -56,7 +59,8 @@ A simple, shared clinic queue for small local clinics in India. Reception can ch
 
 - After changing `lib/api-spec/openapi.yaml`, run `pnpm --filter @workspace/api-spec run codegen`.
 - SSE updates are broadcast within the API server process; the current MVP uses one API server instance.
-- If Drizzle proposes truncating populated tables to add a constraint, do not accept it. Preserve records and use a safe additive schema update.
+- VPS update order: `git pull`, install dependencies, run `pnpm --filter @workspace/db run migrate` with the VPS `DATABASE_URL`, build, then restart the app.
+- Migrations are additive and data-preserving. They use `ADD COLUMN IF NOT EXISTS` for ClinicQ fields that may already exist on the VPS.
 
 ## Pointers
 
