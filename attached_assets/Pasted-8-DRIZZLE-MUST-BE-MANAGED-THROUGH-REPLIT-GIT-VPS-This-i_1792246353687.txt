@@ -1,0 +1,59 @@
+8. DRIZZLE MUST BE MANAGED THROUGH REPLIT → GIT → VPS
+
+This is a critical requirement.
+
+Do NOT ask the user to manually edit the Drizzle schema on the VPS.
+
+Do NOT manually modify the Drizzle schema outside the Replit development workflow.
+
+Replit must be responsible for updating the Drizzle schema so that it accurately represents the PostgreSQL database structure required by this application.
+
+The required workflow is:
+
+Replit
+→ update application code
+→ update Drizzle schema
+→ generate the appropriate database migration(s)
+→ test/typecheck/build
+→ commit changes
+→ push to the existing GitHub repository
+
+Then the VPS deployment workflow will be:
+
+VPS
+→ git pull
+→ install/update dependencies if required
+→ apply the generated Drizzle migration(s) to PostgreSQL
+→ build the application
+→ restart the application
+
+The Drizzle schema committed to Git must be the source of truth for the application's database model.
+
+IMPORTANT:
+- Do not create a second competing database schema.
+- Do not manually modify the Drizzle schema on the VPS.
+- Do not use `drizzle push` in a way that silently destroys, recreates, or resets existing production data.
+- Prefer explicit, version-controlled Drizzle migrations for schema changes.
+- Migrations must be safe for the existing PostgreSQL database and preserve existing data.
+- Do not drop existing tables or columns unless explicitly instructed.
+- Do not rename existing columns unless explicitly instructed.
+- Before generating migrations, compare the desired schema against the existing PostgreSQL structure.
+- Ensure the generated migration accounts for the schema changes already made to PostgreSQL:
+  - clinics: clinic_code, location, subscription_plan, coupon_code,
+    subscription_amount, subscription_renewal_date, is_active
+  - patients: email, clerk_user_id
+  - queue_entries: patient_joined_online
+  - consultations: consultation_notes, diagnosis, prescription,
+    consultation_data, doctor_observations, follow_up_information
+
+The final committed Drizzle schema and migration files must accurately represent these changes.
+
+Before committing:
+1. Typecheck the project.
+2. Build the project.
+3. Verify the Drizzle schema.
+4. Verify the generated migration.
+5. Verify that the migration is non-destructive to existing ClinicQ data.
+6. Confirm that the application still uses the existing tables and relationships.
+
+Do not consider the task complete until the updated Drizzle schema and migration files are committed to Git and ready to be pulled by the VPS.
